@@ -8,7 +8,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Main {
     public static final String REMOTE_SERVICE_URI = "https://raw.githubusercontent.com/netology-code/jd-homeworks/master/http/task1/cats";
@@ -16,28 +15,29 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        CloseableHttpClient httpClient = HttpClientBuilder.create()
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setConnectTimeout(5000)    // максимальное время ожидание подключения к серверу
                         .setSocketTimeout(30000)    // максимальное время ожидания получения данных
                         .setRedirectsEnabled(false) // возможность следовать редиректу в ответе
                         .build())
-                .build();
+                .build()) {
 
-        HttpGet request = new HttpGet(REMOTE_SERVICE_URI);
-        CloseableHttpResponse response = httpClient.execute(request);
+            HttpGet request = new HttpGet(REMOTE_SERVICE_URI);
+            CloseableHttpResponse response = httpClient.execute(request);
 
-        List<Fact> facts = mapper.readValue(
-                response.getEntity().getContent(),
-                new TypeReference<List<Fact>>() {
-                }
-        );
+            List<Fact> facts = mapper.readValue(
+                    response.getEntity().getContent(),
+                    new TypeReference<>() {
+                    }
+            );
 
-        List<Fact> voteFacts = facts.stream()
-                .filter(fact -> fact.getUpvotes() != null)
-                .filter(fact -> fact.getUpvotes() != 0)
-                .collect(Collectors.toList());
+            List<Fact> voteFacts = facts.stream()
+                    .filter(fact -> fact.getUpvotes() != null)
+                    .filter(fact -> fact.getUpvotes() != 0)
+                    .toList();
 
-        voteFacts.forEach(System.out::println);
+            voteFacts.forEach(System.out::println);
+        }
     }
 }
